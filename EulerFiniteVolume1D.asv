@@ -232,7 +232,9 @@ classdef EulerFiniteVolume1D < handle & utilitiesClass
         
         % Real-time Plotting
         function realtimePlot(obj)
-            set(obj.sim.plot, 'XData', obj.mesh.x, 'YData', obj.euler.state.rho);
+            figure(1)
+            
+            plot(obj.mesh.x, obj.euler.state.rho);
             drawnow;            
         end
         
@@ -262,41 +264,13 @@ classdef EulerFiniteVolume1D < handle & utilitiesClass
         function explicitRK2TimeStep(obj)
             
             obj.getResidual();
-            Qtemp               = obj.euler.state.Q;
-            
             K1                  = obj.sim.dtt.*(obj.sim.Residual./obj.mesh.dx);
+            Qtemp               = obj.euler.state.Q;
             obj.euler.state.Q   = obj.euler.state.Q + 0.5*K1;
             obj.updateBoundaryConditions();
-            obj.getResidual();
             
+            obj.getResidual();
             obj.euler.state.Q   = Qtemp + obj.sim.dtt.*(obj.sim.Residual./obj.mesh.dx);   
-            
-        end
-
-        % Compute One Explicit Euler Time Step
-        function explicitRK4TimeStep(obj)
-            
-            obj.getResidual();
-            Qtemp               = obj.euler.state.Q;
-            
-            K1                  = obj.sim.dtt.*(obj.sim.Residual./obj.mesh.dx);
-            obj.euler.state.Q   = Qtemp + 0.5*K1;
-            obj.updateBoundaryConditions();
-            obj.getResidual();
-            
-            K2                  = obj.sim.dtt.*(obj.sim.Residual./obj.mesh.dx);
-            obj.euler.state.Q   = Qtemp + 0.5*K2;
-            obj.updateBoundaryConditions();
-            obj.getResidual();
-            
-            K3                  = obj.sim.dtt.*(obj.sim.Residual./obj.mesh.dx);
-            obj.euler.state.Q   = Qtemp + 1.0*K3;
-            obj.updateBoundaryConditions();
-            obj.getResidual();
-            
-            K4                  = obj.sim.dtt.*(obj.sim.Residual./obj.mesh.dx);
-            
-            obj.euler.state.Q   = Qtemp + (K1 + 2*K2 + 2*K3 + K4)/6;   
             
         end
         
@@ -305,7 +279,7 @@ classdef EulerFiniteVolume1D < handle & utilitiesClass
             
             obj.sim.t   = 0;    
             
-            while obj.sim.t     < obj.sim.tfinal
+            while obj.sim.t     < obj.sim.tfinal*(obj.thermo.aInf)  
                 
                 obj.explicitEulerTimeStep(); 
                 obj.sim.t       = obj.sim.t + obj.sim.dtt;    
@@ -351,28 +325,9 @@ classdef EulerFiniteVolume1D < handle & utilitiesClass
             
             obj.sim.t   = 0;    
             
-            while obj.sim.t     < obj.sim.tfinal
+            while obj.sim.t     < obj.sim.tfinal*(obj.thermo.aInf)  
                 
                 obj.explicitRK2TimeStep(); 
-                obj.sim.t       = obj.sim.t + obj.sim.dtt;    
-                
-                if obj.sim.realplot
-                    realtimePlot(obj);
-                end
-                
-                obj.euler.state.getVar();    
-                obj.updateBoundaryConditions();
-            end    
-        end  
-
-        % Perform Explicit Euler First Order Time Marching
-        function solveExplicitRK4TimeAccurate(obj)    
-            
-            obj.sim.t   = 0;    
-            
-            while obj.sim.t     < obj.sim.tfinal
-                
-                obj.explicitRK4TimeStep(); 
                 obj.sim.t       = obj.sim.t + obj.sim.dtt;    
                 
                 if obj.sim.realplot
@@ -392,10 +347,6 @@ classdef EulerFiniteVolume1D < handle & utilitiesClass
             obj.makeNonDim();                   % Non dimentionalize if specified
             obj.euler.state.getVar();         % Calculate field variables
             
-            if obj.sim.realplot
-                obj.sim.plot = plot(NaN, NaN, 'Color', 'black', 'LineWidth', 1);
-            end
-            
             if obj.sim.timeit,  tic;            end
             
             switch obj.sim.time.accurate
@@ -403,8 +354,7 @@ classdef EulerFiniteVolume1D < handle & utilitiesClass
                     switch obj.sim.time.scheme
                         case 'EEuler',  obj.solveExplicitEulerTimeAccurate();
                         case 'AB2',     obj.solveExplicitAB2TimeAccurate();
-                        case 'RK2',     obj.solveExplicitRK2TimeAccurate();
-                        case 'RK4',     obj.solveExplicitRK4TimeAccurate();
+                        case 'RK2
                         otherwise,      error('Error: Specified time marching scheme %s is not specialized.', obj.sim.time.scheme);
                     end % switch obj.sim.time.scheme
                 otherwise,              error('Error: Time accuracy mode %f is not specialized.', obj.sim.time.accurate);

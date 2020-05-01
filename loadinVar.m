@@ -3,18 +3,18 @@ function input = loadinVar()
     % Problem Definition
     input.sim.problemtype   = 'shocktube';
     input.sim.ICtype        = 'fromIC';
-    input.sim.BCtypeL       = 'reflection';
-    input.sim.BCtypeR       = 'reflection';
+    input.sim.BCtypeL       = 'outflow';
+    input.sim.BCtypeR       = 'outflow';
     input.sim.BCmode        = 'dirichlet';
     input.sim.fluxfunc      = 'Roe';
     input.sim.realplot      = 0;
     input.sim.nondim        = 1;
     input.sim.makeplot      = 1;
-    input.sim.timeit        = 1;
-    input.sim.tfinal        = 6.1/1000;
-    input.sim.dtt           = 0.0025/1000;
+    input.sim.timeit        = 0;
+    input.sim.tfinal        = 4/1000;
+    input.sim.dtt           = 0.004/1000;
     input.sim.eps           = 0.000001;
-    input.sim.time.scheme   = 'AB2';
+    input.sim.time.scheme   = 'EEuler';
     input.sim.time.accurate = 1;
     input.order             = 2;
     
@@ -32,7 +32,7 @@ function input = loadinVar()
 
     % Geometry
     input.mesh.L            = 10;
-    input.mesh.numpt        = 400;
+    input.mesh.numpt        = 300;
     
     % Limiter type
     input.limiter.type      = 'vanAlbada';
