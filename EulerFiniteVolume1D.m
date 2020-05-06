@@ -274,6 +274,27 @@ classdef EulerFiniteVolume1D < handle & utilitiesClass
         end
 
         % Compute One Explicit Euler Time Step
+        function explicitRK3TVDTimeStep(obj)
+            
+            obj.getResidual();
+            Qtemp               = obj.euler.state.Q;
+            
+            K1                  = Qtemp + obj.sim.dtt.*(obj.sim.Residual./obj.mesh.dx);
+            obj.euler.state.Q   = K1;
+            
+            obj.updateBoundaryConditions();
+            obj.getResidual();
+            
+            K2                  = 0.75*Qtemp + 0.25*K1 + 0.25*obj.sim.dtt.*(obj.sim.Residual./obj.mesh.dx);
+            obj.euler.state.Q   = K2;
+            obj.updateBoundaryConditions();
+            obj.getResidual();
+
+            obj.euler.state.Q   = Qtemp/3 + 2*K2/3 + (2/3)*obj.sim.dtt.*(obj.sim.Residual./obj.mesh.dx);   
+            
+        end
+        
+        % Compute One Explicit Euler Time Step
         function explicitRK4TimeStep(obj)
             
             obj.getResidual();
@@ -366,6 +387,25 @@ classdef EulerFiniteVolume1D < handle & utilitiesClass
         end  
 
         % Perform Explicit Euler First Order Time Marching
+        function solveExplicitRK3TVDTimeAccurate(obj)    
+            
+            obj.sim.t   = 0;    
+            
+            while obj.sim.t     < obj.sim.tfinal
+                
+                obj.explicitRK3TVDTimeStep(); 
+                obj.sim.t       = obj.sim.t + obj.sim.dtt;    
+                
+                if obj.sim.realplot
+                    realtimePlot(obj);
+                end
+                
+                obj.euler.state.getVar();    
+                obj.updateBoundaryConditions();
+            end    
+        end          
+        
+        % Perform Explicit Euler First Order Time Marching
         function solveExplicitRK4TimeAccurate(obj)    
             
             obj.sim.t   = 0;    
@@ -404,6 +444,7 @@ classdef EulerFiniteVolume1D < handle & utilitiesClass
                         case 'EEuler',  obj.solveExplicitEulerTimeAccurate();
                         case 'AB2',     obj.solveExplicitAB2TimeAccurate();
                         case 'RK2',     obj.solveExplicitRK2TimeAccurate();
+                        case 'RK3TVD',  obj.solveExplicitRK3TVDTimeAccurate();
                         case 'RK4',     obj.solveExplicitRK4TimeAccurate();
                         otherwise,      error('Error: Specified time marching scheme %s is not specialized.', obj.sim.time.scheme);
                     end % switch obj.sim.time.scheme

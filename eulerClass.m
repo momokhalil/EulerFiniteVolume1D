@@ -12,7 +12,7 @@ classdef eulerClass < handle
         % eulerStateClass Constructor
         function obj = eulerClass(input)
             obj.input           = input;
-            obj.state           = cStateClass(input);
+            obj.state           = cStateClass(input.mesh.numpt, input.thermo.g);
         end
         
         % Get exact boundary variables [u, rho, P, a]

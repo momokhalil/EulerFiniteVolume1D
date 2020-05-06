@@ -19,6 +19,7 @@ classdef fvMethodClass < handle
             obj.setFluxFunction();
             obj.setFluxLimiterFunction();
             obj.setLimitedStatefunction();
+            obj.setSlopeCorrectionFunction();
         end
         
         % Select flux function type
@@ -124,24 +125,47 @@ classdef fvMethodClass < handle
             obj.limiter.Prhou   (obj.limiter.slope.rhou > 0)    = obj.limiter.func(obj.limiter.slope.rhou(obj.limiter.slope.rhou > 0));               
             obj.limiter.Pe      (obj.limiter.slope.e > 0)       = obj.limiter.func(obj.limiter.slope.e(obj.limiter.slope.e > 0));    
 
-            obj.limiter.Prho            = (2./(obj.limiter.slope.rho + 1)).*obj.limiter.Prho;
-            obj.limiter.Prhou           = (2./(obj.limiter.slope.rhou + 1)).*obj.limiter.Prhou;
-            obj.limiter.Pe              = (2./(obj.limiter.slope.e + 1)).*obj.limiter.Pe; 
-            
+            obj.limiter.slope.correction();
+
             obj.limiter.Phi             = zeros(3*obj.input.mesh.numpt, 1);
-            
             obj.limiter.Phi(1:3:end)    = obj.limiter.Prho;
             obj.limiter.Phi(2:3:end)    = obj.limiter.Prhou;
             obj.limiter.Phi(3:3:end)    = obj.limiter.Pe;   
             
         end
         
+        function setSlopeCorrectionFunction(obj)
+            switch obj.order
+                case 1, obj.limiter.slope.correction    = @ obj.correctFirstOrder;
+                case 2, obj.limiter.slope.correction    = @ obj.correctSecondOrder;
+            end
+        end
+        
+        function correctFirstOrder(obj)
+            obj.limiter.Prho            = obj.limiter.Prho;
+            obj.limiter.Prhou           = obj.limiter.Prhou;
+            obj.limiter.Pe              = obj.limiter.Pe; 
+        end
+        
+        function correctSecondOrder(obj)
+            obj.limiter.Prho            = (0.5./(obj.limiter.slope.rho + 1)).*obj.limiter.Prho;
+            obj.limiter.Prhou           = (0.5./(obj.limiter.slope.rhou + 1)).*obj.limiter.Prhou;
+            obj.limiter.Pe              = (0.5./(obj.limiter.slope.e + 1)).*obj.limiter.Pe; 
+        end
+        
         % Get unlimited Left and Right Interface States
         function reconstructUnlimitedState(obj, eulerState)
             Qq                  = [eulerState.BC.L.Q; eulerState.state.Q; eulerState.BC.R.Q]; 
-            PQ                  = 0.25.*(Qq(7:end) - Qq(1:end-6));
-            obj.fluxState.L.Q   = Qq(1:end-3) + (obj.order-1)*[[0;0;0]; PQ];    
-            obj.fluxState.R.Q   = Qq(4:end)   - (obj.order-1)*[PQ; [0;0;0]];
+            PQ                  = (Qq(7:end) - Qq(1:end-6));
+            
+            if obj.order == 1
+                obj.fluxState.L.Q   = Qq(1:end-3);    
+                obj.fluxState.R.Q   = Qq(4:end);    
+            else
+                obj.fluxState.L.Q   = Qq(1:end-3) + [[0;0;0]; PQ];    
+                obj.fluxState.R.Q   = Qq(4:end)   - [PQ; [0;0;0]];                
+            end
+            
         end
         
         % Get limited Left and Right Interface States
@@ -150,10 +174,11 @@ classdef fvMethodClass < handle
             obj.getFluxLimiter();  
 
             Qq                  = [eulerState.BC.L.Q; eulerState.state.Q; eulerState.BC.R.Q];          
-            PQ                  = 0.25.*obj.limiter.Phi.*(Qq(7:end) - Qq(1:end-6));
+            PQ                  = obj.limiter.Phi.*(Qq(7:end) - Qq(1:end-6));
 
             obj.fluxState.L.Q   = Qq(1:end-3) + (obj.order-1)*[[0;0;0]; PQ];    
             obj.fluxState.R.Q   = Qq(4:end)   - (obj.order-1)*[PQ; [0;0;0]];
+            
         end
         
         % Get flux

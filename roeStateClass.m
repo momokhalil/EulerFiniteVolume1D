@@ -22,6 +22,8 @@ classdef roeStateClass < handle
         Xdiag1
         Xdiagm1
         
+        lam
+        
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Thermodynamic Parameters
         g
@@ -62,8 +64,8 @@ classdef roeStateClass < handle
         
         % roeStateClass Constructor
         function obj = roeStateClass(input)
-            obj.L                   = cStateClass(input);
-            obj.R                   = cStateClass(input);
+            obj.L                   = cStateClass(input.mesh.numpt+1, input.thermo.g);
+            obj.R                   = cStateClass(input.mesh.numpt+1, input.thermo.g);
             
             obj.g                   = input.thermo.g;
             obj.gm                  = obj.g - 1;
@@ -92,6 +94,7 @@ classdef roeStateClass < handle
             obj.IAi                 = [obj.oneindj; obj.oneindi; obj.oneindj; obj.twoindj];
             obj.IAj                 = [obj.oneindj; obj.oneindj; obj.oneindi; obj.twoindi];
             
+            obj.lam                 = obj.Xdiag;
             obj.Xdiag1              = obj.diagp1;
             obj.Xdiagm1             = obj.diagp1;
             obj.XIdiag1             = obj.diagp1;
@@ -109,6 +112,9 @@ classdef roeStateClass < handle
             obj.L.getVar();
             obj.R.getVar();
 
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % Roe Average State
+            
             sqRhoL              = sqrt(obj.L.rho);
             sqRhoR              = sqrt(obj.R.rho);
             sqRhoRL             = sqRhoL + sqRhoR;
@@ -121,7 +127,9 @@ classdef roeStateClass < handle
             Lp                  = u + a;
             Lm                  = u - a;
             
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % Entropy Fix
+            
             r1                  = abs(Lp) < obj.epsi;
             r2                  = abs(Lm) < obj.epsi;
             
@@ -187,14 +195,12 @@ classdef roeStateClass < handle
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % Lambda
-
-            lam                     = obj.Xdiag;
+        
+            obj.lam(1:3:end)        = u;
+            obj.lam(2:3:end)        = Lp;
+            obj.lam(3:3:end)        = Lm;
             
-            lam(1:3:end)            = u;
-            lam(2:3:end)            = Lp;
-            lam(3:3:end)            = Lm;
-            
-            obj.Lambda              = sparse(obj.dind, obj.dind, lam);
+            obj.Lambda              = sparse(obj.dind, obj.dind, obj.lam);
 
         end
         
