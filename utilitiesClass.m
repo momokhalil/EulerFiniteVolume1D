@@ -33,7 +33,7 @@ classdef utilitiesClass < handle
             
             plot(obj.mesh.x, obj.exactSol.Ma, 'LineWidth', 1.5, 'Color', 'black');
             hold on
-            plot(obj.mesh.x, obj.euler.state.u./obj.euler.state.a, '-*', 'LineWidth', 1, 'Color', 'black', 'MarkerSize', 3);
+            plot(obj.mesh.x, obj.euler.state.u./obj.euler.state.a, '-*', 'LineWidth', 1, 'Color', 'black', 'MarkerSize', 9);
 
             title('Numerical and Exact solutions for Mach Number');
             xlabel('x position');
@@ -54,7 +54,7 @@ classdef utilitiesClass < handle
             figure('Position', [100 10 1200 900])
             plot(obj.mesh.x, obj.exactSol.rho, 'LineWidth', 1.5, 'Color', 'black');
             hold on
-            plot(obj.mesh.x, obj.euler.state.rho*obj.thermo.RhoInf, '-*', 'LineWidth', 1, 'Color', 'black', 'MarkerSize', 3);
+            plot(obj.mesh.x, obj.euler.state.rho*obj.thermo.RhoInf, '-*', 'LineWidth', 1, 'Color', 'black', 'MarkerSize', 9);
             title('Numerical and Exact solutions for Density');
             xlabel('x position');
             ylabel('Density (kg/m^3)');

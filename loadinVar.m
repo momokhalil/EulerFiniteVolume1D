@@ -7,12 +7,12 @@ function input = loadinVar()
     input.sim.BCtypeR       = 'outflow';
     input.sim.BCmode        = 'dirichlet';
     input.sim.fluxfunc      = 'Roe';
-    input.sim.realplot      = 1;
+    input.sim.realplot      = 0;
     input.sim.nondim        = 1;
     input.sim.makeplot      = 1;
-    input.sim.timeit        = 0;
+    input.sim.timeit        = 1;
     input.sim.tfinal        = 6.1/1000;
-    input.sim.dtt           = 0.0025/1000;
+    input.sim.dtt           = 0.01/1000;
     input.sim.eps           = 0.000001;
     input.sim.time.scheme   = 'RK2';
     input.sim.time.accurate = 1;
@@ -32,7 +32,7 @@ function input = loadinVar()
 
     % Geometry
     input.mesh.L            = 10;
-    input.mesh.numpt        = 500;
+    input.mesh.numpt        = 400;
     
     % Limiter type
     input.limiter.type      = 'vanAlbada';
